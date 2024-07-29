@@ -1,14 +1,4 @@
-const { MessageActionRow, MessageButton } = require('discord.js');
-const { Client, GatewayIntentBits } = require('discord.js');
-const { Collection } = require('discord.js');
-const fs = require('fs');
-const path = require('path');
-require('dotenv').config();
-
-const client = new Client({
-    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]
-});
-client.commands = new Collection();
+const { SlashCommandBuilder } = require('discord.js');
 
 // Utility to generate random math questions
 function generateQuestion() {
@@ -42,28 +32,34 @@ function generateQuestion() {
     return { question, answer };
 }
 
-// Command to start a math quiz
-client.on('messageCreate', async (message) => {
-    if (message.author.bot) return;
-
-    if (message.content.startsWith('!math')) {
+module.exports = {
+    data: new SlashCommandBuilder()
+        .setName('math')
+        .setDescription('Start a math quiz!'),
+    async execute(interaction) {
         const { question, answer } = generateQuestion();
         const emoji = '🧠'; // Emoji to represent the quiz
 
-        message.channel.send(`**Math Quiz ${emoji}:** What is ${question}?`)
-            .then(() => {
-                client.once('messageCreate', responseMessage => {
-                    if (responseMessage.author.id === message.author.id) {
-                        const userAnswer = parseInt(responseMessage.content.replace('!', '').trim(), 10);
-                        if (userAnswer === answer) {
-                            message.channel.send(`🎉 Correct! The answer is ${answer}.`);
-                        } else {
-                            message.channel.send(`❌ Wrong! The correct answer was ${answer}.`);
-                        }
-                    }
-                });
-            });
-    }
-});
+        await interaction.reply(`**Math Quiz ${emoji}:** What is ${question}?`);
 
-module.exports = client;
+        // Collecting the answer
+        const filter = response => response.author.id === interaction.user.id && !isNaN(response.content);
+        const collector = interaction.channel.createMessageCollector({ filter, time: 15000 });
+
+        collector.on('collect', response => {
+            const userAnswer = parseInt(response.content.trim(), 10);
+            if (userAnswer === answer) {
+                interaction.followUp(`🎉 Correct! The answer is ${answer}.`);
+            } else {
+                interaction.followUp(`❌ Wrong! The correct answer was ${answer}.`);
+            }
+            collector.stop(); // Stop collecting after the answer is given
+        });
+
+        collector.on('end', collected => {
+            if (collected.size === 0) {
+                interaction.followUp(`⏳ Time's up! The correct answer was ${answer}.`);
+            }
+        });
+    },
+};
