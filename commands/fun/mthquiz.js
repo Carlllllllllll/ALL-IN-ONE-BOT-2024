@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { EmbedBuilder, Colors } = require('discord.js');
+const { EmbedBuilder, Colors, Events } = require('discord.js');
 
 const quizzes = new Map(); // To store quiz state per channel
 
@@ -57,10 +57,17 @@ async function startMathQuiz(interaction, channelId) {
     quizzes.get(channelId).timeout = timeout;
 }
 
+// Ensure your bot is listening to messages in your main bot file
+client.on(Events.MessageCreate, message => {
+    if (!message.author.bot) {
+        checkAnswer(message);
+    }
+});
+
 function checkAnswer(message) {
     const channelId = message.channel.id;
     const quiz = quizzes.get(channelId);
-    if (!quiz || message.author.bot) return; // Ignore bot messages
+    if (!quiz) return; // Ignore if there's no active quiz in this channel
 
     const userAnswer = parseInt(message.content, 10);
     if (isNaN(userAnswer)) return;
@@ -118,4 +125,3 @@ async function endMathQuiz(interaction, channelId, endMessage = 'Math quiz ended
         }
     }
 }
-
