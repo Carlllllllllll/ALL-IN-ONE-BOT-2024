@@ -1,10 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { EmbedBuilder, Colors, Events } = require('discord.js');
 
-let mathQuizActive = false;
-let correctAnswer = null;
-let currentChannel = null;
-let quizTimeout = null;
+const quizzes = new Map(); // To store quiz state per channel
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -20,28 +17,28 @@ module.exports = {
                 .setDescription('End the current math quiz')),
     async execute(interaction) {
         const subcommand = interaction.options.getSubcommand();
+        const channelId = interaction.channel.id;
 
         if (subcommand === 'start') {
-            if (mathQuizActive) {
-                return interaction.reply('A math quiz is already active!');
+            if (quizzes.has(channelId)) {
+                return interaction.reply('A math quiz is already active in this channel!');
             }
-            startMathQuiz(interaction);
+            startMathQuiz(interaction, channelId);
         } else if (subcommand === 'end') {
-            if (!mathQuizActive) {
-                return interaction.reply('There is no active math quiz.');
+            if (!quizzes.has(channelId)) {
+                return interaction.reply('There is no active math quiz in this channel.');
             }
-            endMathQuiz(interaction);
+            endMathQuiz(interaction, channelId);
         }
     }
 };
 
-function startMathQuiz(interaction) {
+function startMathQuiz(interaction, channelId) {
     const num1 = Math.floor(Math.random() * 100) + 1;
     const num2 = Math.floor(Math.random() * 100) + 1;
-    correctAnswer = num1 + num2;
+    const correctAnswer = num1 + num2;
 
-    mathQuizActive = true;
-    currentChannel = interaction.channel;
+    quizzes.set(channelId, { correctAnswer, timeout: null });
 
     const embed = new EmbedBuilder()
         .setTitle('Math Quiz Started! 🎉')
@@ -50,31 +47,38 @@ function startMathQuiz(interaction) {
 
     interaction.reply({ embeds: [embed] });
 
-    
-    quizTimeout = setTimeout(() => {
-        if (mathQuizActive) {
-            endMathQuiz(interaction, 'No one answered in time. The quiz has ended.');
+    // Set a timeout to end the quiz if no one answers in 3 minutes (180000 milliseconds)
+    const timeout = setTimeout(() => {
+        if (quizzes.has(channelId)) {
+            endMathQuiz(interaction, channelId, 'No one answered in time. The quiz has ended.');
         }
     }, 180000);
+
+    quizzes.get(channelId).timeout = timeout;
 }
 
 function checkAnswer(message) {
-    if (message.channel !== currentChannel) return;
+    const channelId = message.channel.id;
+    const quiz = quizzes.get(channelId);
+    if (!quiz || message.author.bot) return; // Ignore bot messages
+
     const userAnswer = parseInt(message.content, 10);
     if (isNaN(userAnswer)) return;
 
-    if (userAnswer === correctAnswer) {
-        clearTimeout(quizTimeout);
-        startNextQuiz(message);
+    if (userAnswer === quiz.correctAnswer) {
+        clearTimeout(quiz.timeout);
+        startNextQuiz(message, channelId);
     } else {
         message.reply(`Incorrect. 😔 Try again!`);
     }
 }
 
-function startNextQuiz(message) {
+function startNextQuiz(message, channelId) {
     const num1 = Math.floor(Math.random() * 100) + 1;
     const num2 = Math.floor(Math.random() * 100) + 1;
-    correctAnswer = num1 + num2;
+    const correctAnswer = num1 + num2;
+
+    quizzes.get(channelId).correctAnswer = correctAnswer;
 
     const embed = new EmbedBuilder()
         .setTitle('Correct! 🎉 Here\'s your next question:')
@@ -83,19 +87,19 @@ function startNextQuiz(message) {
 
     message.channel.send({ embeds: [embed] });
 
-   
-    quizTimeout = setTimeout(() => {
-        if (mathQuizActive) {
-            endMathQuiz(message, 'No one answered in time. The quiz has ended.');
+    // Reset the timeout for the new question
+    const timeout = setTimeout(() => {
+        if (quizzes.has(channelId)) {
+            endMathQuiz(message, channelId, 'No one answered in time. The quiz has ended.');
         }
     }, 180000);
+
+    quizzes.get(channelId).timeout = timeout;
 }
 
-function endMathQuiz(interaction, endMessage = 'Math quiz ended.') {
-    mathQuizActive = false;
-    correctAnswer = null;
-    currentChannel = null;
-    clearTimeout(quizTimeout);
+function endMathQuiz(interaction, channelId, endMessage = 'Math quiz ended.') {
+    quizzes.delete(channelId);
+    clearTimeout(quizzes.get(channelId)?.timeout);
 
     const embed = new EmbedBuilder()
         .setTitle('Math Quiz Ended')
@@ -105,9 +109,9 @@ function endMathQuiz(interaction, endMessage = 'Math quiz ended.') {
     interaction.reply({ embeds: [embed] });
 }
 
-
+// Add this to your bot's main file to listen for messages
 client.on(Events.MessageCreate, message => {
-    if (mathQuizActive) {
+    if (quizzes.has(message.channel.id)) {
         checkAnswer(message);
     }
 });
