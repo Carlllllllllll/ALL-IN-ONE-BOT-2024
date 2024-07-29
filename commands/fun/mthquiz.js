@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { EmbedBuilder, Colors, Events } = require('discord.js');
+const { EmbedBuilder, Colors } = require('discord.js');
 
 const quizzes = new Map(); // To store quiz state per channel
 
@@ -108,10 +108,3 @@ function endMathQuiz(interaction, channelId, endMessage = 'Math quiz ended.') {
 
     interaction.reply({ embeds: [embed] });
 }
-
-// Add this to your bot's main file to listen for messages
-client.on(Events.MessageCreate, message => {
-    if (quizzes.has(message.channel.id)) {
-        checkAnswer(message);
-    }
-});
