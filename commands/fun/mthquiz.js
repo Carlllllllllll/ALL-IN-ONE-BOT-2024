@@ -21,19 +21,19 @@ module.exports = {
 
         if (subcommand === 'start') {
             if (quizzes.has(channelId)) {
-                return interaction.reply('A math quiz is already active in this channel!');
+                return interaction.reply({ content: 'A math quiz is already active in this channel!', ephemeral: true });
             }
-            startMathQuiz(interaction, channelId);
+            await startMathQuiz(interaction, channelId);
         } else if (subcommand === 'end') {
             if (!quizzes.has(channelId)) {
-                return interaction.reply('There is no active math quiz in this channel.');
+                return interaction.reply({ content: 'There is no active math quiz in this channel.', ephemeral: true });
             }
-            endMathQuiz(interaction, channelId);
+            await endMathQuiz(interaction, channelId);
         }
     }
 };
 
-function startMathQuiz(interaction, channelId) {
+async function startMathQuiz(interaction, channelId) {
     const num1 = Math.floor(Math.random() * 100) + 1;
     const num2 = Math.floor(Math.random() * 100) + 1;
     const correctAnswer = num1 + num2;
@@ -45,12 +45,12 @@ function startMathQuiz(interaction, channelId) {
         .setDescription(`What is ${num1} + ${num2}? 🤔\n\nType your answer directly in this channel.`)
         .setColor(Colors.Blue);
 
-    interaction.reply({ embeds: [embed] });
+    await interaction.reply({ embeds: [embed] });
 
     // Set a timeout to end the quiz if no one answers in 3 minutes (180000 milliseconds)
     const timeout = setTimeout(() => {
         if (quizzes.has(channelId)) {
-            endMathQuiz(interaction, channelId, 'No one answered in time. The quiz has ended.');
+            endMathQuiz(null, channelId, 'No one answered in time. The quiz has ended.');
         }
     }, 180000);
 
@@ -90,21 +90,31 @@ function startNextQuiz(message, channelId) {
     // Reset the timeout for the new question
     const timeout = setTimeout(() => {
         if (quizzes.has(channelId)) {
-            endMathQuiz(message, channelId, 'No one answered in time. The quiz has ended.');
+            endMathQuiz(null, channelId, 'No one answered in time. The quiz has ended.');
         }
     }, 180000);
 
     quizzes.get(channelId).timeout = timeout;
 }
 
-function endMathQuiz(interaction, channelId, endMessage = 'Math quiz ended.') {
+async function endMathQuiz(interaction, channelId, endMessage = 'Math quiz ended.') {
+    const quiz = quizzes.get(channelId);
+    if (!quiz) return;
+
     quizzes.delete(channelId);
-    clearTimeout(quizzes.get(channelId)?.timeout);
+    clearTimeout(quiz.timeout);
 
     const embed = new EmbedBuilder()
         .setTitle('Math Quiz Ended')
         .setDescription(endMessage)
         .setColor(Colors.Red);
 
-    interaction.reply({ embeds: [embed] });
+    if (interaction) {
+        await interaction.reply({ embeds: [embed] });
+    } else {
+        const channel = client.channels.cache.get(channelId);
+        if (channel) {
+            channel.send({ embeds: [embed] });
+        }
+    }
 }
