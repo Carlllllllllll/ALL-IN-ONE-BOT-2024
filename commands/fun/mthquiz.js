@@ -118,3 +118,4 @@ async function endMathQuiz(interaction, channelId, endMessage = 'Math quiz ended
         }
     }
 }
+
