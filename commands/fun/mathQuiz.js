@@ -194,5 +194,3 @@ function endQuiz(channelId, endMessage) {
 
     quizData.collector.channel.send({ embeds: [endEmbed] });
 }
-New Text Document.txt
-9 KB
