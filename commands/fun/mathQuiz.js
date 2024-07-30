@@ -3,7 +3,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require('@discordjs/builders');
 function generateQuestion() {
     const num1 = Math.floor(Math.random() * 500) + 1;
     const num2 = Math.floor(Math.random() * 500) + 1;
-    const operations = ['+', '-', '*'];
+    const operations = ['+', '-'];
     const operation = operations[Math.floor(Math.random() * operations.length)];
     const question = `${num1} ${operation} ${num2}`;
     let answer;
@@ -14,9 +14,6 @@ function generateQuestion() {
             break;
         case '-':
             answer = num1 - num2;
-            break;
-        case '*':
-            answer = num1 * num2;
             break;
     }
 
