@@ -166,11 +166,13 @@ module.exports = {
                     await endQuiz(interaction, channelId, 'The quiz has ended.');
                 });
             } else if (subcommand === 'end') {
-                await interaction.deferReply();
-
-                await endQuiz(interaction, channelId, `${interaction.user} ended the game.`);
-
-                await interaction.followUp({ content: 'The game has ended.' });
+                try {
+                    await interaction.deferReply();
+                    await endQuiz(interaction, channelId, `${interaction.user} ended the game.`);
+                    await interaction.followUp({ content: 'The game has ended.' });
+                } catch (error) {
+                    console.error('Error ending the quiz:', error);
+                }
             }
         } catch (error) {
             console.error('Error executing math quiz command:', error);
