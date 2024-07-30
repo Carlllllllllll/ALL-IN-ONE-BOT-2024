@@ -1,6 +1,16 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('@discordjs/builders');
+const { MessageCollector } = require('discord.js');
 
 let activeQuizzes = new Map();
+
+function generateQuestion() {
+    // Example question generation logic
+    const num1 = Math.floor(Math.random() * 10) + 1;
+    const num2 = Math.floor(Math.random() * 10) + 1;
+    const answer = num1 + num2;
+    const question = `${num1} + ${num2}`;
+    return { question, answer };
+}
 
 module.exports = {
     data: new SlashCommandBuilder()
