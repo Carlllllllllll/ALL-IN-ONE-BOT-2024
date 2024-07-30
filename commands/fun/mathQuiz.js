@@ -113,7 +113,7 @@ module.exports = {
 
                 startQuestionTimer();
 
-                collector.on('collect', async response => {
+                collector.on('collect', response => {
                     const { commandUser, questionData } = quizData;
                     const userAnswer = parseInt(response.content.slice(1).trim(), 10);
 
@@ -126,7 +126,7 @@ module.exports = {
                             .setDescription('✅ Correct! Here is the next question.')
                             .setColor('#0099ff');
 
-                        await response.reply({ embeds: [correctEmbed] });
+                        interaction.followUp({ embeds: [correctEmbed] });
 
                         const newQuestion = generateQuestion();
                         quizData.questionData = newQuestion;
@@ -138,11 +138,11 @@ module.exports = {
                             .setColor('#0099ff')
                             .setFooter({ text: '⏳ You have 30 seconds to answer this question.' });
 
-                        await response.channel.send({ embeds: [newQuestionEmbed] });
+                        interaction.followUp({ embeds: [newQuestionEmbed] });
 
                         startQuestionTimer();
                     } else {
-                        await response.reply('❌ Incorrect answer! Try again.');
+                        response.reply('❌ Incorrect answer! Try again.');
                     }
                 });
 
@@ -194,3 +194,5 @@ function endQuiz(channelId, endMessage) {
 
     quizData.collector.channel.send({ embeds: [endEmbed] });
 }
+New Text Document.txt
+9 KB
