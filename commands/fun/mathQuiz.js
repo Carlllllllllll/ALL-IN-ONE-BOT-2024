@@ -75,7 +75,7 @@ module.exports = {
                     .setColor(blueColor)
                     .setFooter({ text: '⏳ You have 2 minutes to answer this question.' });
 
-                const sentMessage = await interaction.editReply({ embeds: [quizEmbed] });
+                await interaction.editReply({ embeds: [quizEmbed] });
 
                 const filter = response => {
                     return response.content.startsWith('!') &&
@@ -196,6 +196,17 @@ async function endQuiz(interaction, channelId, reason) {
                 .setColor(0xff0000);
 
             await channel.send({ embeds: [endEmbed] });
+        }
+    } else {
+        // This part is not needed if the quiz is guaranteed to be active
+        const channel = await interaction.client.channels.fetch(channelId);
+        if (channel) {
+            const noQuizEmbed = new EmbedBuilder()
+                .setTitle('Math Quiz 🧠')
+                .setDescription('There is no active quiz to end.')
+                .setColor(0xff0000);
+
+            await channel.send({ embeds: [noQuizEmbed] });
         }
     }
 }
