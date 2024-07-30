@@ -66,7 +66,7 @@ module.exports = {
                     .setTitle('Math Quiz 🧠')
                     .setDescription(`**Question:** What is ${question}? Respond with \`!<your answer>\``)
                     .setColor(color)
-                    .setFooter({ text: '⏳ You have 30 seconds to answer this question.' });
+                    .setFooter({ text: '⏳ You have 3 minutes to answer this question.' });
 
                 await interaction.reply({ embeds: [quizEmbed] });
 
@@ -100,13 +100,13 @@ module.exports = {
                                 .setTitle('Math Quiz 🧠')
                                 .setDescription(`**New Question:** What is ${newQuestion.question}? Respond with \`!<your answer>\``)
                                 .setColor('#0099ff')
-                                .setFooter({ text: '⏳ You have 30 seconds to answer this question.' });
+                                .setFooter({ text: '⏳ You have 3 minutes to answer this question.' });
 
                             interaction.followUp({ embeds: [newQuestionEmbed] });
 
                             startQuestionTimer();
                         }
-                    }, 30 * 1000);
+                    }, 3 * 60 * 1000); // 3 minutes
                 };
 
                 startQuestionTimer();
@@ -135,7 +135,7 @@ module.exports = {
                                 .setTitle('Math Quiz 🧠')
                                 .setDescription(`**New Question:** What is ${newQuestion.question}? Respond with \`!<your answer>\``)
                                 .setColor('#0099ff')
-                                .setFooter({ text: '⏳ You have 30 seconds to answer this question.' });
+                                .setFooter({ text: '⏳ You have 3 minutes to answer this question.' });
 
                             interaction.followUp({ embeds: [newQuestionEmbed] });
 
