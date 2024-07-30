@@ -153,7 +153,11 @@ module.exports = {
                 });
             } else if (subcommand === 'end') {
                 await interaction.deferReply(); // Defers the reply to handle processing time
+
+                // End the quiz
                 endQuiz(channelId, 'The quiz has been ended by the user.');
+
+                // Notify that the game has ended
                 await interaction.followUp({ content: 'The quiz has been ended.' });
             }
         } catch (error) {
