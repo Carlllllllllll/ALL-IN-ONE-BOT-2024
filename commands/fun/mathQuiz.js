@@ -8,16 +8,15 @@ function generateQuestion() {
     const num2 = Math.floor(Math.random() * 100) + 1;
     const operations = ['+', '-'];
     const operation = operations[Math.floor(Math.random() * operations.length)];
+
     let question, answer;
 
     if (operation === '+') {
         question = `${num1} + ${num2}`;
         answer = num1 + num2;
     } else { // operation === '-'
-        // Ensure no negative results
         if (num1 < num2) {
-            // Swap num1 and num2 if the result would be negative
-            [num1, num2] = [num2, num1];
+            [num1, num2] = [num2, num1]; // Swap to avoid negative results
         }
         question = `${num1} - ${num2}`;
         answer = num1 - num2;
@@ -46,7 +45,6 @@ module.exports = {
 
         try {
             if (subcommand === 'start') {
-                // End any active quiz in the channel if exists
                 if (activeQuizzes.has(channelId)) {
                     const quizData = activeQuizzes.get(channelId);
                     quizData.collector.stop();
@@ -57,15 +55,9 @@ module.exports = {
                         .setDescription(`A new quiz is starting. The previous quiz has been ended.`)
                         .setColor(0xff0000);
 
-                    // Check if the interaction is still valid before replying
-                    if (interaction.deferred || interaction.replied) {
-                        await interaction.followUp({ embeds: [endEmbed] });
-                    } else {
-                        await interaction.reply({ embeds: [endEmbed] });
-                    }
+                    await interaction.followUp({ embeds: [endEmbed] });
                 }
 
-                // Start a new quiz
                 let { question, answer } = generateQuestion();
                 const color = 0x0099ff;
 
@@ -75,7 +67,6 @@ module.exports = {
                     .setColor(color)
                     .setFooter({ text: '⏳ You have 30 seconds to answer each question.' });
 
-                // Respond to the interaction
                 await interaction.reply({ embeds: [quizEmbed] });
 
                 const filter = response => {
@@ -91,12 +82,9 @@ module.exports = {
                 const startQuestionTimer = () => {
                     questionTimer = setTimeout(() => {
                         const newQuestion = generateQuestion();
-                        question = newQuestion.question;
-                        answer = newQuestion.answer;
-
                         const newQuestionEmbed = new EmbedBuilder()
                             .setTitle('Math Quiz 🧠')
-                            .setDescription(`**New Question:** What is ${question}? Respond with \`!<your answer>\``)
+                            .setDescription(`**New Question:** What is ${newQuestion.question}? Respond with \`!<your answer>\``)
                             .setColor(color)
                             .setFooter({ text: '⏳ You have 30 seconds to answer each question.' });
 
@@ -171,12 +159,7 @@ module.exports = {
                     .setDescription(`The quiz has ended. Thanks for participating!`)
                     .setColor(0xff0000);
 
-                // Check if the interaction is still valid before replying
-                if (interaction.deferred || interaction.replied) {
-                    await interaction.followUp({ embeds: [endEmbed] });
-                } else {
-                    await interaction.reply({ embeds: [endEmbed] });
-                }
+                await interaction.followUp({ embeds: [endEmbed] });
                 activeQuizzes.delete(channelId);
             }
         } catch (error) {
