@@ -1,8 +1,8 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('@discordjs/builders');
 
 function generateQuestion() {
-    const num1 = Math.floor(Math.random() * 50) + 1;
-    const num2 = Math.floor(Math.random() * 50) + 1;
+    const num1 = Math.floor(Math.random() * 500) + 1;
+    const num2 = Math.floor(Math.random() * 500) + 1;
     const operations = ['+', '-', '*'];
     const operation = operations[Math.floor(Math.random() * operations.length)];
     const question = `${num1} ${operation} ${num2}`;
@@ -28,7 +28,7 @@ module.exports = {
         .setName('mathquiz')
         .setDescription('Start a math quiz!'),
     async execute(interaction) {
-        const { question, answer } = generateQuestion();
+        let { question, answer } = generateQuestion();
 
         const color = parseInt('0099ff', 16);
 
@@ -46,7 +46,7 @@ module.exports = {
 
         const collector = interaction.channel.createMessageCollector({ filter, time: 3 * 60 * 1000 });
 
-        collector.on('collect', async response => {
+        collector.on('collect', response => {
             const userAnswer = parseInt(response.content.slice(1).trim(), 10);
             if (userAnswer === answer) {
                 const correctEmbed = new EmbedBuilder()
@@ -54,21 +54,33 @@ module.exports = {
                     .setDescription(`The answer was ${answer}. Great job, ${response.author.username}!`)
                     .setColor('#00ff00');
 
-                await response.reply({ embeds: [correctEmbed] });
-                collector.stop('answered');
+                response.reply({ embeds: [correctEmbed] });
+
+                // Generate a new question and update the quiz message
+                ({ question, answer } = generateQuestion());
+                const newQuizEmbed = new EmbedBuilder()
+                    .setTitle('Math Quiz 🧠')
+                    .setDescription(`**Question:** What is ${question}? Respond with \`!<your answer>\``)
+                    .setColor(color)
+                    .setFooter({ text: '⏳ You have 3 minutes to answer.' });
+
+                interaction.channel.send({ embeds: [newQuizEmbed] }).then(newQuizMessage => {
+                    quizMessage.delete();
+                    quizMessage = newQuizMessage;
+                });
             } else {
                 response.reply('❌ Incorrect answer! Try again.');
             }
         });
 
-        collector.on('end', async (collected, reason) => {
+        collector.on('end', (collected, reason) => {
             if (reason === 'time') {
                 const timeoutEmbed = new EmbedBuilder()
                     .setTitle("Time's up! ⏳")
                     .setDescription(`The time to answer has expired. The correct answer was ${answer}.`)
                     .setColor('#ff0000');
 
-                await interaction.channel.send({ embeds: [timeoutEmbed] });
+                interaction.channel.send({ embeds: [timeoutEmbed] });
                 quizMessage.delete();
             }
         });
