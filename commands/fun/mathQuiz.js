@@ -62,7 +62,7 @@ module.exports = {
                 activeQuizzes.set(channelId, quizData);
 
                 const { question } = quizData.questionData;
-                const color = '#0099ff';
+                const color = '0099ff'; // Updated to remove the #
 
                 const quizEmbed = new EmbedBuilder()
                     .setTitle('Math Quiz 🧠')
@@ -90,7 +90,7 @@ module.exports = {
                             const timeoutEmbed = new EmbedBuilder()
                                 .setTitle('Time\'s up for this question! ⏳')
                                 .setDescription(`The correct answer was: ${answer}. Here is a new question.`)
-                                .setColor('#ff0000');
+                                .setColor('ff0000'); // Updated to remove the #
 
                             interaction.followUp({ embeds: [timeoutEmbed] });
 
@@ -101,7 +101,7 @@ module.exports = {
                             const newQuestionEmbed = new EmbedBuilder()
                                 .setTitle('Math Quiz 🧠')
                                 .setDescription(`**New Question:** What is ${newQuestion.question}? Respond with \`!<your answer>\``)
-                                .setColor('#0099ff')
+                                .setColor('0099ff') // Updated to remove the #
                                 .setFooter({ text: '⏳ You have 30 seconds to answer this question.' });
 
                             interaction.followUp({ embeds: [newQuestionEmbed] });
@@ -124,7 +124,7 @@ module.exports = {
                         const correctEmbed = new EmbedBuilder()
                             .setTitle('Math Quiz 🧠')
                             .setDescription('✅ Correct! Here is the next question.')
-                            .setColor('#0099ff');
+                            .setColor('0099ff'); // Updated to remove the #
 
                         interaction.followUp({ embeds: [correctEmbed] });
 
@@ -135,7 +135,7 @@ module.exports = {
                         const newQuestionEmbed = new EmbedBuilder()
                             .setTitle('Math Quiz 🧠')
                             .setDescription(`**New Question:** What is ${newQuestion.question}? Respond with \`!<your answer>\``)
-                            .setColor('#0099ff')
+                            .setColor('0099ff') // Updated to remove the #
                             .setFooter({ text: '⏳ You have 30 seconds to answer this question.' });
 
                         interaction.followUp({ embeds: [newQuestionEmbed] });
@@ -190,7 +190,7 @@ function endQuiz(channelId, endMessage) {
     const endEmbed = new EmbedBuilder()
         .setTitle('Math Quiz Ended ⏳')
         .setDescription(endMessage)
-        .setColor('#ff0000');
+        .setColor('ff0000'); // Updated to remove the #
 
     quizData.collector.channel.send({ embeds: [endEmbed] });
 }
