@@ -49,35 +49,27 @@ module.exports = {
         collector.on('collect', response => {
             const userAnswer = parseInt(response.content.slice(1).trim(), 10);
             if (userAnswer === answer) {
+                const newQuestion = generateQuestion();
+                question = newQuestion.question;
+                answer = newQuestion.answer;
+
                 const correctEmbed = new EmbedBuilder()
-                    .setTitle('Correct! ✅')
-                    .setDescription(`The answer was ${answer}. Great job, ${response.author.username}!`)
-                    .setColor('#00ff00');
-
-                response.reply({ embeds: [correctEmbed] });
-
-                // Generate a new question and update the quiz message
-                ({ question, answer } = generateQuestion());
-                const newQuizEmbed = new EmbedBuilder()
                     .setTitle('Math Quiz 🧠')
-                    .setDescription(`**Question:** What is ${question}? Respond with \`!<your answer>\``)
+                    .setDescription(`✅ Correct! The answer was ${userAnswer}. New question: What is ${question}? Respond with \`!<your answer>\``)
                     .setColor(color)
                     .setFooter({ text: '⏳ You have 3 minutes to answer.' });
 
-                interaction.channel.send({ embeds: [newQuizEmbed] }).then(newQuizMessage => {
-                    quizMessage.delete();
-                    quizMessage = newQuizMessage;
-                });
+                quizMessage.edit({ embeds: [correctEmbed] });
             } else {
                 response.reply('❌ Incorrect answer! Try again.');
             }
         });
 
-        collector.on('end', (collected, reason) => {
-            if (reason === 'time') {
+        collector.on('end', collected => {
+            if (collected.size === 0) {
                 const timeoutEmbed = new EmbedBuilder()
                     .setTitle("Time's up! ⏳")
-                    .setDescription(`The time to answer has expired. The correct answer was ${answer}.`)
+                    .setDescription(`The time to answer has expired. The last question was: What is ${question}?`)
                     .setColor('#ff0000');
 
                 interaction.channel.send({ embeds: [timeoutEmbed] });
