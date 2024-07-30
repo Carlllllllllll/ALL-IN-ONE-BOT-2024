@@ -187,7 +187,11 @@ module.exports = {
             }
         } catch (error) {
             console.error('Error executing math quiz command:', error);
-            await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+            if (!interaction.replied) {
+                await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+            } else {
+                await interaction.followUp({ content: 'There was an error while executing this command!', ephemeral: true });
+            }
         }
     },
 };
