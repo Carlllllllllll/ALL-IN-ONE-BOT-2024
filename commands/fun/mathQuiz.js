@@ -162,7 +162,6 @@ module.exports = {
 
                 clearTimeout(activeQuizzes.get(channelId).questionTimer);
                 activeQuizzes.get(channelId).collector.stop();
-
                 activeQuizzes.delete(channelId);
 
                 const endEmbed = new EmbedBuilder()
