@@ -49,6 +49,7 @@ module.exports = {
                     return;
                 }
 
+                await interaction.deferReply(); // Defers the reply to handle processing time
                 const quizData = {
                     commandUser: userId,
                     questionData: generateQuestion(),
@@ -70,7 +71,7 @@ module.exports = {
                     .setColor(blueColor)
                     .setFooter({ text: '⏳ You have 30 seconds to answer this question.' });
 
-                await interaction.reply({ embeds: [quizEmbed] });
+                await interaction.editReply({ embeds: [quizEmbed] });
 
                 const filter = response => {
                     return response.content.startsWith('!') &&
@@ -151,7 +152,9 @@ module.exports = {
                     endQuiz(channelId, 'The quiz has ended.');
                 });
             } else if (subcommand === 'endgame') {
+                await interaction.deferReply(); // Defers the reply to handle processing time
                 endQuiz(channelId, 'The quiz has been ended by the user.');
+                await interaction.editReply({ content: 'The quiz has been ended.' });
             }
         } catch (error) {
             console.error('Error executing math quiz command:', error);
