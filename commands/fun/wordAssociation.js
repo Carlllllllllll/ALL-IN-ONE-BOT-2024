@@ -244,7 +244,7 @@ module.exports = {
                 
                 if (userWord.startsWith('!')) {
                     await message.delete().catch(console.error);
-                    await message.author.send('You cannot send commands in the game channel.').catch(console.error);
+                    await message.author.send('As you are the command user you can not send a guess 😊.').catch(console.error);
                     return;
                 }
                 
