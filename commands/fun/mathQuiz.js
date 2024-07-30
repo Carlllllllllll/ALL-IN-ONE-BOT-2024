@@ -37,13 +37,10 @@ module.exports = {
     async execute(interaction) {
         const action = interaction.options.getString('action');
 
+        // Check if there's already an active quiz in the channel
         if (action === 'start') {
             if (activeQuizzes.has(interaction.channel.id)) {
-                if (!interaction.replied) {
-                    await interaction.reply('There is already an active quiz in this channel.');
-                } else {
-                    await interaction.followUp('There is already an active quiz in this channel.');
-                }
+                await interaction.reply('There is already an active quiz in this channel.');
                 return;
             }
 
@@ -58,11 +55,7 @@ module.exports = {
                 .setColor(color)
                 .setFooter({ text: '⏳ You have 3 minutes to answer.' });
 
-            if (!interaction.replied) {
-                await interaction.reply({ embeds: [quizEmbed] });
-            } else {
-                await interaction.followUp({ embeds: [quizEmbed] });
-            }
+            await interaction.reply({ embeds: [quizEmbed] });
 
             const filter = response => {
                 return response.content.startsWith('!') && response.author.id !== interaction.client.user.id;
@@ -83,11 +76,9 @@ module.exports = {
                         .setColor(color)
                         .setFooter({ text: '⏳ You have 3 minutes to answer.' });
 
-                    if (!interaction.replied) {
-                        interaction.reply({ embeds: [correctEmbed] });
-                    } else {
-                        interaction.followUp({ embeds: [correctEmbed] });
-                    }
+                    interaction.followUp({ embeds: [correctEmbed] });
+                } else {
+                    response.reply('❌ Incorrect answer! Try again.');
                 }
             });
 
@@ -100,20 +91,12 @@ module.exports = {
                         .setDescription(`The time to answer has expired. The last question was: What is ${question}?`)
                         .setColor('#ff0000');
 
-                    if (!interaction.replied) {
-                        interaction.reply({ embeds: [timeoutEmbed] });
-                    } else {
-                        interaction.followUp({ embeds: [timeoutEmbed] });
-                    }
+                    interaction.followUp({ embeds: [timeoutEmbed] });
                 }
             });
         } else if (action === 'end') {
             if (!activeQuizzes.has(interaction.channel.id)) {
-                if (!interaction.replied) {
-                    await interaction.reply('There is no active quiz in this channel.');
-                } else {
-                    await interaction.followUp('There is no active quiz in this channel.');
-                }
+                await interaction.reply('There is no active quiz in this channel.');
                 return;
             }
 
@@ -124,11 +107,7 @@ module.exports = {
                 .setDescription('The math quiz has been ended.')
                 .setColor('#ff0000');
 
-            if (!interaction.replied) {
-                await interaction.reply({ embeds: [endEmbed] });
-            } else {
-                await interaction.followUp({ embeds: [endEmbed] });
-            }
+            await interaction.reply({ embeds: [endEmbed] });
         }
     },
 };
