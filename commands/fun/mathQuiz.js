@@ -168,7 +168,7 @@ module.exports = {
             } else if (subcommand === 'end') {
                 await interaction.deferReply();
 
-                await endQuiz(interaction, channelId, 'The game has ended by user request.');
+                await endQuiz(interaction, channelId, `${interaction.user} ended the game.`);
 
                 await interaction.followUp({ content: 'The game has ended.' });
             }
