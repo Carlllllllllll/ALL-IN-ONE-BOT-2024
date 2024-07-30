@@ -8,16 +8,19 @@ function generateQuestion() {
     const num2 = Math.floor(Math.random() * 100) + 1;
     const operations = ['+', '-'];
     const operation = operations[Math.floor(Math.random() * operations.length)];
-    const question = `${num1} ${operation} ${num2}`;
-    let answer;
+    let question, answer;
 
-    switch (operation) {
-        case '+':
-            answer = num1 + num2;
-            break;
-        case '-':
-            answer = num1 - num2;
-            break;
+    if (operation === '+') {
+        question = `${num1} + ${num2}`;
+        answer = num1 + num2;
+    } else { // operation === '-'
+        // Ensure no negative results
+        if (num1 < num2) {
+            // Swap num1 and num2 if the result would be negative
+            [num1, num2] = [num2, num1];
+        }
+        question = `${num1} - ${num2}`;
+        answer = num1 - num2;
     }
 
     return { question, answer };
@@ -58,7 +61,7 @@ module.exports = {
                 }
 
                 // Start a new quiz
-                let { question, answer } = generateQuestion(); // Changed to let
+                let { question, answer } = generateQuestion();
                 const color = 0x0099ff; // Corrected color format
 
                 const quizEmbed = new EmbedBuilder()
@@ -77,7 +80,7 @@ module.exports = {
 
                 const collector = new MessageCollector(interaction.channel, { filter, time: 3 * 60 * 1000 });
 
-                let questionTimer; // Changed to let
+                let questionTimer;
 
                 const startQuestionTimer = () => {
                     questionTimer = setTimeout(() => {
