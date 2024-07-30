@@ -195,13 +195,6 @@ async function endQuiz(interaction, channelId, reason) {
 
         const channel = await interaction.client.channels.fetch(channelId);
         if (channel) {
-            const messages = await channel.messages.fetch({ limit: 100 });
-            messages.forEach(message => {
-                if (message.author.id === interaction.client.user.id) {
-                    message.delete().catch(console.error);
-                }
-            });
-
             const endEmbed = new EmbedBuilder()
                 .setTitle('Math Quiz 🧠')
                 .setDescription(reason)
