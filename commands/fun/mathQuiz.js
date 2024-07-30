@@ -57,7 +57,7 @@ module.exports = {
                     questionTimer: null,
                     questionAnswered: false,
                     overallTimer: setTimeout(() => {
-                        endQuiz(channelId, 'Time\'s up! The overall quiz time of 2 minutes has ended.');
+                        endQuiz(interaction, channelId, 'Time\'s up! The overall quiz time of 2 minutes has ended.');
                     }, 2 * 60 * 1000) // 2 minutes
                 };
                 activeQuizzes.set(channelId, quizData);
@@ -102,7 +102,7 @@ module.exports = {
                             const newQuestionEmbed = new EmbedBuilder()
                                 .setTitle('Math Quiz 🧠')
                                 .setDescription(`**New Question:** What is ${newQuestion.question}? Respond with \`!<your answer>\``)
-                                .setColor(blueColor)
+                                .setColor(0x0099ff) // Blue color
                                 .setFooter({ text: '⏳ You have 2 minutes to answer this question.' });
 
                             interaction.followUp({ embeds: [newQuestionEmbed] });
@@ -125,7 +125,7 @@ module.exports = {
                         const correctEmbed = new EmbedBuilder()
                             .setTitle('Math Quiz 🧠')
                             .setDescription('✅ Correct! Here is the next question.')
-                            .setColor(blueColor);
+                            .setColor(0x0099ff); // Blue color
 
                         interaction.followUp({ embeds: [correctEmbed] });
 
@@ -136,7 +136,7 @@ module.exports = {
                         const newQuestionEmbed = new EmbedBuilder()
                             .setTitle('Math Quiz 🧠')
                             .setDescription(`**New Question:** What is ${newQuestion.question}? Respond with \`!<your answer>\``)
-                            .setColor(blueColor)
+                            .setColor(0x0099ff) // Blue color
                             .setFooter({ text: '⏳ You have 2 minutes to answer this question.' });
 
                         interaction.followUp({ embeds: [newQuestionEmbed] });
@@ -149,13 +149,13 @@ module.exports = {
                     if (quizData.overallTimer) {
                         clearTimeout(quizData.overallTimer);
                     }
-                    endQuiz(channelId, 'The quiz has ended.');
+                    endQuiz(interaction, channelId, 'The quiz has ended.');
                 });
             } else if (subcommand === 'end') {
                 await interaction.deferReply(); // Defers the reply to handle processing time
 
                 // End the quiz
-                endQuiz(channelId, 'The game has ended by user request.');
+                endQuiz(interaction, channelId, 'The game has ended by user request.');
 
                 // Notify that the game has ended
                 await interaction.followUp({ content: 'The game has ended.' });
@@ -166,7 +166,7 @@ module.exports = {
     }
 };
 
-async function endQuiz(channelId, reason) {
+async function endQuiz(interaction, channelId, reason) {
     const quizData = activeQuizzes.get(channelId);
 
     if (quizData) {
@@ -191,7 +191,7 @@ async function endQuiz(channelId, reason) {
                 }
             });
 
-            // Send a new embed indicating that the quiz has timed out or ended
+            // Send a new embed indicating that the quiz has ended
             const endEmbed = new EmbedBuilder()
                 .setTitle('Math Quiz 🧠')
                 .setDescription(reason)
