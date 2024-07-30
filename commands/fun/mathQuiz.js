@@ -119,7 +119,7 @@ module.exports = {
                 startQuestionTimer();
 
                 collector.on('collect', response => {
-                    const { commandUser, questionData } = quizData;
+                    const { questionData } = quizData;
                     const userAnswer = parseInt(response.content.slice(1).trim(), 10);
 
                     if (userAnswer === questionData.answer) {
@@ -159,8 +159,6 @@ module.exports = {
                 await interaction.deferReply();
 
                 endQuiz(interaction, channelId, 'The game has ended by user request.');
-
-                await interaction.followUp({ content: 'The game has ended.' });
             }
         } catch (error) {
             console.error('Error executing math quiz command:', error);
@@ -198,16 +196,6 @@ async function endQuiz(interaction, channelId, reason) {
                 .setColor(0xff0000);
 
             await channel.send({ embeds: [endEmbed] });
-        }
-    } else {
-        const channel = await interaction.client.channels.fetch(channelId);
-        if (channel) {
-            const noQuizEmbed = new EmbedBuilder()
-                .setTitle('Math Quiz 🧠')
-                .setDescription('There is no active quiz to end.')
-                .setColor(0xff0000);
-
-            await channel.send({ embeds: [noQuizEmbed] });
         }
     }
 }
