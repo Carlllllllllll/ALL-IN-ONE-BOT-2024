@@ -62,12 +62,12 @@ module.exports = {
                 activeQuizzes.set(channelId, quizData);
 
                 const { question } = quizData.questionData;
-                const color = '#0099ff';
+                const color = '#0099ff'; // Make sure this is a valid color
 
                 const quizEmbed = new EmbedBuilder()
                     .setTitle('Math Quiz 🧠')
                     .setDescription(`**Question:** What is ${question}? Respond with \`!<your answer>\``)
-                    .setColor(color)
+                    .setColor(color) // Ensure the color is a valid hex string
                     .setFooter({ text: '⏳ You have 30 seconds to answer this question.' });
 
                 await interaction.reply({ embeds: [quizEmbed] });
@@ -184,13 +184,3 @@ function endQuiz(channelId, endMessage) {
     clearTimeout(quizData.questionTimer);
     clearTimeout(quizData.overallTimer);
     quizData.collector.stop();
-
-    activeQuizzes.delete(channelId);
-
-    const endEmbed = new EmbedBuilder()
-        .setTitle('Math Quiz Ended ⏳')
-        .setDescription(endMessage)
-        .setColor('#ff0000');
-
-    quizData.collector.channel.send({ embeds: [endEmbed] });
-}
