@@ -1,5 +1,4 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('@discordjs/builders');
-const { MessageCollector } = require('discord.js');
 
 let activeQuizzes = new Set();
 
@@ -29,7 +28,11 @@ module.exports = {
         .setDescription('Start a math quiz!'),
     async execute(interaction) {
         if (activeQuizzes.has(interaction.channel.id)) {
-            await interaction.reply('There is already an active quiz in this channel.');
+            if (!interaction.replied) {
+                await interaction.reply('There is already an active quiz in this channel.');
+            } else {
+                await interaction.followUp('There is already an active quiz in this channel.');
+            }
             return;
         }
 
@@ -44,7 +47,11 @@ module.exports = {
             .setColor(color)
             .setFooter({ text: '⏳ You have 3 minutes to answer.' });
 
-        await interaction.reply({ embeds: [quizEmbed] });
+        if (!interaction.replied) {
+            await interaction.reply({ embeds: [quizEmbed] });
+        } else {
+            await interaction.followUp({ embeds: [quizEmbed] });
+        }
 
         const filter = response => {
             return response.content.startsWith('!') && response.author.id !== interaction.client.user.id;
@@ -65,7 +72,11 @@ module.exports = {
                     .setColor(color)
                     .setFooter({ text: '⏳ You have 3 minutes to answer.' });
 
-                response.reply({ embeds: [correctEmbed] });
+                if (!interaction.replied) {
+                    interaction.reply({ embeds: [correctEmbed] });
+                } else {
+                    interaction.followUp({ embeds: [correctEmbed] });
+                }
             } else {
                 response.reply('❌ Incorrect answer! Try again.');
             }
@@ -80,7 +91,11 @@ module.exports = {
                     .setDescription(`The time to answer has expired. The last question was: What is ${question}?`)
                     .setColor('#ff0000');
 
-                interaction.followUp({ embeds: [timeoutEmbed] });
+                if (!interaction.replied) {
+                    interaction.reply({ embeds: [timeoutEmbed] });
+                } else {
+                    interaction.followUp({ embeds: [timeoutEmbed] });
+                }
             }
         });
     },
