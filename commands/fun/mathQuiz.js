@@ -34,7 +34,7 @@ module.exports = {
         )
         .addSubcommand(subcommand =>
             subcommand
-                .setName('endgame')
+                .setName('end')
                 .setDescription('End the current math quiz.')
         ),
     async execute(interaction) {
@@ -57,8 +57,8 @@ module.exports = {
                     questionTimer: null,
                     questionAnswered: false,
                     overallTimer: setTimeout(() => {
-                        endQuiz(channelId, 'The overall quiz time of 3 minutes has ended.');
-                    }, 3 * 60 * 1000) // 3 minutes
+                        endQuiz(channelId, 'The overall quiz time of 2 minutes has ended.');
+                    }, 2 * 60 * 1000) // 2 minutes
                 };
                 activeQuizzes.set(channelId, quizData);
 
@@ -69,9 +69,9 @@ module.exports = {
                     .setTitle('Math Quiz 🧠')
                     .setDescription(`**Question:** What is ${question}? Respond with \`!<your answer>\``)
                     .setColor(blueColor)
-                    .setFooter({ text: '⏳ You have 30 seconds to answer this question.' });
+                    .setFooter({ text: '⏳ You have 2 minutes to answer this question.' });
 
-                await interaction.editReply({ embeds: [quizEmbed] });
+                const sentMessage = await interaction.editReply({ embeds: [quizEmbed] });
 
                 const filter = response => {
                     return response.content.startsWith('!') &&
@@ -80,7 +80,7 @@ module.exports = {
                         response.channel.id === channelId;
                 };
 
-                const collector = new MessageCollector(interaction.channel, { filter, time: 30 * 1000 });
+                const collector = new MessageCollector(interaction.channel, { filter, time: 2 * 60 * 1000 });
                 quizData.collector = collector;
 
                 const startQuestionTimer = () => {
@@ -91,7 +91,7 @@ module.exports = {
                             const timeoutEmbed = new EmbedBuilder()
                                 .setTitle('Time\'s up for this question! ⏳')
                                 .setDescription(`The correct answer was: ${answer}. Here is a new question.`)
-                                .setColor(blueColor); // Blue color
+                                .setColor(blueColor);
 
                             interaction.followUp({ embeds: [timeoutEmbed] });
 
@@ -102,14 +102,14 @@ module.exports = {
                             const newQuestionEmbed = new EmbedBuilder()
                                 .setTitle('Math Quiz 🧠')
                                 .setDescription(`**New Question:** What is ${newQuestion.question}? Respond with \`!<your answer>\``)
-                                .setColor(blueColor) // Blue color
-                                .setFooter({ text: '⏳ You have 30 seconds to answer this question.' });
+                                .setColor(blueColor)
+                                .setFooter({ text: '⏳ You have 2 minutes to answer this question.' });
 
                             interaction.followUp({ embeds: [newQuestionEmbed] });
 
                             startQuestionTimer();
                         }
-                    }, 30 * 1000); // 30 seconds per question
+                    }, 2 * 60 * 1000); // 2 minutes per question
                 };
 
                 startQuestionTimer();
@@ -125,7 +125,7 @@ module.exports = {
                         const correctEmbed = new EmbedBuilder()
                             .setTitle('Math Quiz 🧠')
                             .setDescription('✅ Correct! Here is the next question.')
-                            .setColor(blueColor); // Blue color
+                            .setColor(blueColor);
 
                         interaction.followUp({ embeds: [correctEmbed] });
 
@@ -136,8 +136,8 @@ module.exports = {
                         const newQuestionEmbed = new EmbedBuilder()
                             .setTitle('Math Quiz 🧠')
                             .setDescription(`**New Question:** What is ${newQuestion.question}? Respond with \`!<your answer>\``)
-                            .setColor(blueColor) // Blue color
-                            .setFooter({ text: '⏳ You have 30 seconds to answer this question.' });
+                            .setColor(blueColor)
+                            .setFooter({ text: '⏳ You have 2 minutes to answer this question.' });
 
                         interaction.followUp({ embeds: [newQuestionEmbed] });
 
@@ -151,10 +151,10 @@ module.exports = {
                     }
                     endQuiz(channelId, 'The quiz has ended.');
                 });
-            } else if (subcommand === 'endgame') {
+            } else if (subcommand === 'end') {
                 await interaction.deferReply(); // Defers the reply to handle processing time
                 endQuiz(channelId, 'The quiz has been ended by the user.');
-                await interaction.editReply({ content: 'The quiz has been ended.' });
+                await interaction.followUp({ content: 'The quiz has been ended.' });
             }
         } catch (error) {
             console.error('Error executing math quiz command:', error);
@@ -162,7 +162,7 @@ module.exports = {
     }
 };
 
-function endQuiz(channelId, reason) {
+async function endQuiz(channelId, reason) {
     const quizData = activeQuizzes.get(channelId);
 
     if (quizData) {
@@ -177,25 +177,34 @@ function endQuiz(channelId, reason) {
         }
         activeQuizzes.delete(channelId);
 
-        const endEmbed = new EmbedBuilder()
-            .setTitle('Math Quiz 🧠')
-            .setDescription(reason)
-            .setColor(0xff0000); // Red color
-
-        const channel = interaction.client.channels.cache.get(channelId);
+        // Fetch the channel and delete all messages from the bot
+        const channel = await interaction.client.channels.fetch(channelId);
         if (channel) {
-            channel.send({ embeds: [endEmbed] });
+            const messages = await channel.messages.fetch({ limit: 100 });
+            messages.forEach(message => {
+                if (message.author.id === interaction.client.user.id) {
+                    message.delete().catch(console.error);
+                }
+            });
+
+            // Send a new embed indicating that the quiz has timed out or ended
+            const endEmbed = new EmbedBuilder()
+                .setTitle('Math Quiz 🧠')
+                .setDescription(reason)
+                .setColor(0xff0000); // Red color
+
+            await channel.send({ embeds: [endEmbed] });
         }
     } else {
         // Handle case where no quiz was active
-        const noQuizEmbed = new EmbedBuilder()
-            .setTitle('Math Quiz 🧠')
-            .setDescription('There is no active quiz to end.')
-            .setColor(0xff0000); // Red color
-
-        const channel = interaction.client.channels.cache.get(channelId);
+        const channel = await interaction.client.channels.fetch(channelId);
         if (channel) {
-            channel.send({ embeds: [noQuizEmbed] });
+            const noQuizEmbed = new EmbedBuilder()
+                .setTitle('Math Quiz 🧠')
+                .setDescription('There is no active quiz to end.')
+                .setColor(0xff0000); // Red color
+
+            await channel.send({ embeds: [noQuizEmbed] });
         }
     }
 }
