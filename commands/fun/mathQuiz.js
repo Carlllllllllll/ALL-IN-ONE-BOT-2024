@@ -57,7 +57,7 @@ module.exports = {
                     questionAnswered: false,
                     overallTimer: setTimeout(() => {
                         endQuiz(channelId, 'The overall quiz time of 3 minutes has ended.');
-                    }, 3 * 60 * 1000)
+                    }, 3 * 60 * 1000) // 3 minutes
                 };
                 activeQuizzes.set(channelId, quizData);
 
@@ -79,7 +79,7 @@ module.exports = {
                         response.channel.id === channelId;
                 };
 
-                const collector = new MessageCollector(interaction.channel, { filter, time: 3 * 60 * 1000 });
+                const collector = new MessageCollector(interaction.channel, { filter, time: 30 * 1000 });
                 quizData.collector = collector;
 
                 const startQuestionTimer = () => {
@@ -108,7 +108,7 @@ module.exports = {
 
                             startQuestionTimer();
                         }
-                    }, 30 * 1000);
+                    }, 30 * 1000); // 30 seconds per question
                 };
 
                 startQuestionTimer();
