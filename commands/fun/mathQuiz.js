@@ -49,7 +49,7 @@ module.exports = {
                     return;
                 }
 
-                await interaction.deferReply(); // Defers the reply to handle processing time
+                await interaction.deferReply();
                 const quizData = {
                     commandUser: userId,
                     questionData: generateQuestion(),
@@ -58,12 +58,12 @@ module.exports = {
                     questionAnswered: false,
                     overallTimer: setTimeout(() => {
                         endQuiz(interaction, channelId, 'Time\'s up! The overall quiz time of 2 minutes has ended.');
-                    }, 2 * 60 * 1000) // 2 minutes
+                    }, 2 * 60 * 1000)
                 };
                 activeQuizzes.set(channelId, quizData);
 
                 const { question } = quizData.questionData;
-                const blueColor = 0x0099ff; // Blue color
+                const blueColor = 0x0099ff;
 
                 const quizEmbed = new EmbedBuilder()
                     .setTitle('Math Quiz 🧠')
@@ -91,7 +91,7 @@ module.exports = {
                             const timeoutEmbed = new EmbedBuilder()
                                 .setTitle('Time\'s Up! ⏳')
                                 .setDescription(`The correct answer was: ${answer}. Here is a new question.`)
-                                .setColor(0xff0000); // Red color
+                                .setColor(0xff0000);
 
                             interaction.followUp({ embeds: [timeoutEmbed] });
 
@@ -102,14 +102,14 @@ module.exports = {
                             const newQuestionEmbed = new EmbedBuilder()
                                 .setTitle('Math Quiz 🧠')
                                 .setDescription(`**New Question:** What is ${newQuestion.question}? Respond with \`!<your answer>\``)
-                                .setColor(0x0099ff) // Blue color
+                                .setColor(0x0099ff)
                                 .setFooter({ text: '⏳ You have 2 minutes to answer this question.' });
 
                             interaction.followUp({ embeds: [newQuestionEmbed] });
 
                             startQuestionTimer();
                         }
-                    }, 2 * 60 * 1000); // 2 minutes per question
+                    }, 2 * 60 * 1000);
                 };
 
                 startQuestionTimer();
@@ -125,7 +125,7 @@ module.exports = {
                         const correctEmbed = new EmbedBuilder()
                             .setTitle('Math Quiz 🧠')
                             .setDescription('✅ Correct! Here is the next question.')
-                            .setColor(0x0099ff); // Blue color
+                            .setColor(0x0099ff);
 
                         interaction.followUp({ embeds: [correctEmbed] });
 
@@ -136,7 +136,7 @@ module.exports = {
                         const newQuestionEmbed = new EmbedBuilder()
                             .setTitle('Math Quiz 🧠')
                             .setDescription(`**New Question:** What is ${newQuestion.question}? Respond with \`!<your answer>\``)
-                            .setColor(0x0099ff) // Blue color
+                            .setColor(0x0099ff)
                             .setFooter({ text: '⏳ You have 2 minutes to answer this question.' });
 
                         interaction.followUp({ embeds: [newQuestionEmbed] });
@@ -152,12 +152,10 @@ module.exports = {
                     endQuiz(interaction, channelId, 'The quiz has ended.');
                 });
             } else if (subcommand === 'end') {
-                await interaction.deferReply(); // Defers the reply to handle processing time
+                await interaction.deferReply();
 
-                // End the quiz
                 endQuiz(interaction, channelId, 'The game has ended by user request.');
 
-                // Notify that the game has ended
                 await interaction.followUp({ content: 'The game has ended.' });
             }
         } catch (error) {
@@ -181,7 +179,6 @@ async function endQuiz(interaction, channelId, reason) {
         }
         activeQuizzes.delete(channelId);
 
-        // Fetch the channel and delete all messages from the bot
         const channel = await interaction.client.channels.fetch(channelId);
         if (channel) {
             const messages = await channel.messages.fetch({ limit: 100 });
@@ -191,22 +188,20 @@ async function endQuiz(interaction, channelId, reason) {
                 }
             });
 
-            // Send a new embed indicating that the quiz has ended
             const endEmbed = new EmbedBuilder()
                 .setTitle('Math Quiz 🧠')
                 .setDescription(reason)
-                .setColor(0xff0000); // Red color
+                .setColor(0xff0000);
 
             await channel.send({ embeds: [endEmbed] });
         }
     } else {
-        // Handle case where no quiz was active
         const channel = await interaction.client.channels.fetch(channelId);
         if (channel) {
             const noQuizEmbed = new EmbedBuilder()
                 .setTitle('Math Quiz 🧠')
                 .setDescription('There is no active quiz to end.')
-                .setColor(0xff0000); // Red color
+                .setColor(0xff0000);
 
             await channel.send({ embeds: [noQuizEmbed] });
         }
