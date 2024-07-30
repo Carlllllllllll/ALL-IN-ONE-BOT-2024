@@ -20,20 +20,22 @@ module.exports = {
             const channelId = interaction.channel.id;
             const userId = interaction.user.id;
 
+            // Ensure only one quiz per channel
             if (activeQuizzes.has(channelId)) {
-                await interaction.reply({ content: 'There is already an active quiz in this channel.', ephemeral: true });
-                return;
+                return interaction.reply({ content: 'There is already an active quiz in this channel.', ephemeral: true });
             }
 
+            // Set up a new quiz
+            const questionData = generateQuestion();
             activeQuizzes.set(channelId, {
                 commandUser: userId,
-                questionData: generateQuestion(),
+                questionData,
                 collector: null,
                 questionTimer: null,
                 questionAnswered: false
             });
 
-            const { question } = activeQuizzes.get(channelId).questionData;
+            const { question } = questionData;
             const color = 0x0099ff; // Color as a numeric value
 
             const quizEmbed = new EmbedBuilder()
@@ -42,8 +44,10 @@ module.exports = {
                 .setColor(color)
                 .setFooter({ text: '⏳ You have 3 minutes to answer this question.' });
 
+            // Reply with the quiz question
             await interaction.reply({ embeds: [quizEmbed] });
 
+            // Set up message collector
             const filter = response => {
                 return response.content.startsWith('!') &&
                     response.author.id !== interaction.client.user.id &&
@@ -54,8 +58,9 @@ module.exports = {
             const collector = new MessageCollector(interaction.channel, { filter, time: 3 * 60 * 1000 });
             activeQuizzes.get(channelId).collector = collector;
 
+            // Timer for question timeout
             const startQuestionTimer = () => {
-                const { answer } = activeQuizzes.get(channelId).questionData;
+                const { answer } = questionData;
 
                 activeQuizzes.get(channelId).questionTimer = setTimeout(() => {
                     if (!activeQuizzes.get(channelId).questionAnswered) {
@@ -64,7 +69,7 @@ module.exports = {
                             .setDescription(`The correct answer was: ${answer}. The quiz has now ended.`)
                             .setColor(0xff0000); // Color as a numeric value
 
-                        interaction.followUp({ embeds: [timeoutEmbed] });
+                        interaction.followUp({ embeds: [timeoutEmbed] }).catch(console.error);
 
                         // Remove the quiz from activeQuizzes
                         activeQuizzes.delete(channelId);
@@ -75,7 +80,7 @@ module.exports = {
                             .setDescription('The quiz has ended. Thank you for participating!')
                             .setColor(0xff0000); // Color as a numeric value
 
-                        interaction.followUp({ embeds: [endGameEmbed] });
+                        interaction.followUp({ embeds: [endGameEmbed] }).catch(console.error);
                     }
                 }, 3 * 60 * 1000); // 3 minutes
             };
@@ -96,7 +101,7 @@ module.exports = {
                             .setDescription('✅ Correct! Here is the next question.')
                             .setColor(color);
 
-                        interaction.followUp({ embeds: [correctEmbed] });
+                        interaction.followUp({ embeds: [correctEmbed] }).catch(console.error);
 
                         const newQuestion = generateQuestion();
                         activeQuizzes.get(channelId).questionData = newQuestion;
@@ -108,14 +113,14 @@ module.exports = {
                             .setColor(color)
                             .setFooter({ text: '⏳ You have 3 minutes to answer this question.' });
 
-                        interaction.followUp({ embeds: [newQuestionEmbed] });
+                        interaction.followUp({ embeds: [newQuestionEmbed] }).catch(console.error);
 
                         startQuestionTimer();
                     } else {
-                        interaction.followUp('❌ Incorrect answer! Try again.');
+                        interaction.followUp('❌ Incorrect answer! Try again.').catch(console.error);
                     }
                 } else {
-                    interaction.followUp({ content: '🔒 Only the quiz starter can answer the quiz.', ephemeral: true });
+                    interaction.followUp({ content: '🔒 Only the quiz starter can answer the quiz.', ephemeral: true }).catch(console.error);
                 }
             });
 
@@ -128,15 +133,15 @@ module.exports = {
                     .setDescription('The quiz has ended. Thanks for participating!')
                     .setColor(0xff0000); // Color as a numeric value
 
-                interaction.followUp({ embeds: [endEmbed] });
+                interaction.followUp({ embeds: [endEmbed] }).catch(console.error);
             });
 
         } catch (error) {
             console.error('Error executing math quiz command:', error);
             if (!interaction.replied) {
-                await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+                await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true }).catch(console.error);
             } else {
-                await interaction.followUp({ content: 'There was an error while executing this command!', ephemeral: true });
+                await interaction.followUp({ content: 'There was an error while executing this command!', ephemeral: true }).catch(console.error);
             }
         }
     },
