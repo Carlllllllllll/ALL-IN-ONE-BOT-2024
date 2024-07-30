@@ -44,23 +44,21 @@ module.exports = {
             const userId = interaction.user.id;
 
             if (subcommand === 'start') {
-                // Check if there is an active quiz in the channel
                 if (activeQuizzes.has(channelId)) {
                     await interaction.reply({ content: 'There is already an active quiz in this channel.', ephemeral: true });
                     return;
                 }
 
-                // Start a new quiz
                 activeQuizzes.set(channelId, {
                     commandUser: userId,
                     questionData: generateQuestion(),
                     collector: null,
                     questionTimer: null,
-                    questionAnswered: false // Track if the current question is answered
+                    questionAnswered: false
                 });
 
                 const { question } = activeQuizzes.get(channelId).questionData;
-                const color = '#0099ff';
+                const color = 0x0099ff; // Color as a numeric value
 
                 const quizEmbed = new EmbedBuilder()
                     .setTitle('Math Quiz 🧠')
@@ -88,7 +86,7 @@ module.exports = {
                             const timeoutEmbed = new EmbedBuilder()
                                 .setTitle('Time\'s up for this question! ⏳')
                                 .setDescription(`The correct answer was: ${answer}. Here is a new question.`)
-                                .setColor('#ff0000');
+                                .setColor(0xff0000); // Color as a numeric value
 
                             interaction.followUp({ embeds: [timeoutEmbed] });
 
@@ -99,14 +97,14 @@ module.exports = {
                             const newQuestionEmbed = new EmbedBuilder()
                                 .setTitle('Math Quiz 🧠')
                                 .setDescription(`**New Question:** What is ${newQuestion.question}? Respond with \`!<your answer>\``)
-                                .setColor('#0099ff')
+                                .setColor(color)
                                 .setFooter({ text: '⏳ You have 3 minutes to answer this question.' });
 
                             interaction.followUp({ embeds: [newQuestionEmbed] });
 
                             startQuestionTimer();
                         }
-                    }, 3 * 60 * 1000); // 3 minutes
+                    }, 3 * 60 * 1000);
                 };
 
                 startQuestionTimer();
@@ -123,7 +121,7 @@ module.exports = {
                             const correctEmbed = new EmbedBuilder()
                                 .setTitle('Math Quiz 🧠')
                                 .setDescription('✅ Correct! Here is the next question.')
-                                .setColor('#0099ff');
+                                .setColor(color);
 
                             interaction.followUp({ embeds: [correctEmbed] });
 
@@ -134,7 +132,7 @@ module.exports = {
                             const newQuestionEmbed = new EmbedBuilder()
                                 .setTitle('Math Quiz 🧠')
                                 .setDescription(`**New Question:** What is ${newQuestion.question}? Respond with \`!<your answer>\``)
-                                .setColor('#0099ff')
+                                .setColor(color)
                                 .setFooter({ text: '⏳ You have 3 minutes to answer this question.' });
 
                             interaction.followUp({ embeds: [newQuestionEmbed] });
@@ -155,7 +153,7 @@ module.exports = {
                     const endEmbed = new EmbedBuilder()
                         .setTitle('Math Quiz Ended ⏳')
                         .setDescription('The quiz has ended. Thanks for participating!')
-                        .setColor('#ff0000');
+                        .setColor(0xff0000); // Color as a numeric value
 
                     interaction.followUp({ embeds: [endEmbed] });
                 });
@@ -181,7 +179,7 @@ module.exports = {
                 const endEmbed = new EmbedBuilder()
                     .setTitle('Math Quiz Ended ⏳')
                     .setDescription('The quiz has ended. Thanks for participating!')
-                    .setColor('#ff0000');
+                    .setColor(0xff0000); // Color as a numeric value
 
                 await interaction.reply({ embeds: [endEmbed] });
             }
