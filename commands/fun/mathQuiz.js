@@ -55,14 +55,19 @@ module.exports = {
                     const endEmbed = new EmbedBuilder()
                         .setTitle('Math Quiz Ended ⏳')
                         .setDescription(`A new quiz is starting. The previous quiz has been ended.`)
-                        .setColor(0xff0000); // Corrected color format
+                        .setColor(0xff0000);
 
-                    await interaction.reply({ embeds: [endEmbed] });
+                    // Check if the interaction is still valid before replying
+                    if (interaction.deferred || interaction.replied) {
+                        await interaction.followUp({ embeds: [endEmbed] });
+                    } else {
+                        await interaction.reply({ embeds: [endEmbed] });
+                    }
                 }
 
                 // Start a new quiz
                 let { question, answer } = generateQuestion();
-                const color = 0x0099ff; // Corrected color format
+                const color = 0x0099ff;
 
                 const quizEmbed = new EmbedBuilder()
                     .setTitle('Math Quiz 🧠')
@@ -70,6 +75,7 @@ module.exports = {
                     .setColor(color)
                     .setFooter({ text: '⏳ You have 30 seconds to answer each question.' });
 
+                // Respond to the interaction
                 await interaction.reply({ embeds: [quizEmbed] });
 
                 const filter = response => {
@@ -139,7 +145,7 @@ module.exports = {
                     const endEmbed = new EmbedBuilder()
                         .setTitle('Math Quiz Ended ⏳')
                         .setDescription(`The quiz has ended. Thanks for participating!`)
-                        .setColor(0xff0000); // Corrected color format
+                        .setColor(0xff0000);
 
                     interaction.followUp({ embeds: [endEmbed] });
                 });
@@ -163,14 +169,23 @@ module.exports = {
                 const endEmbed = new EmbedBuilder()
                     .setTitle('Math Quiz Ended ⏳')
                     .setDescription(`The quiz has ended. Thanks for participating!`)
-                    .setColor(0xff0000); // Corrected color format
+                    .setColor(0xff0000);
 
-                await interaction.reply({ embeds: [endEmbed] });
+                // Check if the interaction is still valid before replying
+                if (interaction.deferred || interaction.replied) {
+                    await interaction.followUp({ embeds: [endEmbed] });
+                } else {
+                    await interaction.reply({ embeds: [endEmbed] });
+                }
                 activeQuizzes.delete(channelId);
             }
         } catch (error) {
             console.error(error);
-            await interaction.reply('An error occurred while executing this command. Please try again later.');
+            if (interaction.deferred || interaction.replied) {
+                await interaction.followUp('An error occurred while executing this command. Please try again later.');
+            } else {
+                await interaction.reply('An error occurred while executing this command. Please try again later.');
+            }
         }
     },
 };
