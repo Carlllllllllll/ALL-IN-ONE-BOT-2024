@@ -1,27 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('@discordjs/builders');
-const { MessageCollector } = require('discord.js');
 
 let activeQuizzes = new Map();
-
-function generateQuestion() {
-    const num1 = Math.floor(Math.random() * 100) + 1;
-    const num2 = Math.floor(Math.random() * 100) + 1;
-    const operations = ['+', '-'];
-    const operation = operations[Math.floor(Math.random() * operations.length)];
-    const question = `${num1} ${operation} ${num2}`;
-    let answer;
-
-    switch (operation) {
-        case '+':
-            answer = num1 + num2;
-            break;
-        case '-':
-            answer = num1 - num2;
-            break;
-    }
-
-    return { question, answer };
-}
 
 module.exports = {
     data: new SlashCommandBuilder()
