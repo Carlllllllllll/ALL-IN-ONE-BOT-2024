@@ -53,7 +53,7 @@ module.exports = {
                     return;
                 }
 
-                await interaction.deferReply();
+                await interaction.deferReply({ ephemeral: false });
                 const quizData = {
                     commandUser: userId,
                     questionData: generateQuestion(),
@@ -156,7 +156,7 @@ module.exports = {
                     endQuiz(interaction, channelId, 'The quiz has ended.');
                 });
             } else if (subcommand === 'end') {
-                await interaction.deferReply();
+                await interaction.deferReply({ ephemeral: false });
 
                 endQuiz(interaction, channelId, 'The game has ended by user request.');
             }
@@ -195,10 +195,13 @@ async function endQuiz(interaction, channelId, reason) {
                 .setDescription(reason)
                 .setColor(0xff0000);
 
-            await channel.send({ embeds: [endEmbed] });
+            try {
+                await channel.send({ embeds: [endEmbed] });
+            } catch (error) {
+                console.error('Failed to send end message:', error);
+            }
         }
     } else {
-        // This part is not needed if the quiz is guaranteed to be active
         const channel = await interaction.client.channels.fetch(channelId);
         if (channel) {
             const noQuizEmbed = new EmbedBuilder()
@@ -206,7 +209,11 @@ async function endQuiz(interaction, channelId, reason) {
                 .setDescription('There is no active quiz to end.')
                 .setColor(0xff0000);
 
-            await channel.send({ embeds: [noQuizEmbed] });
+            try {
+                await channel.send({ embeds: [noQuizEmbed] });
+            } catch (error) {
+                console.error('Failed to send no quiz message:', error);
+            }
         }
     }
 }
