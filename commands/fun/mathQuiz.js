@@ -16,11 +16,14 @@ module.exports = {
     async execute(interaction) {
         let { question, answer } = generateQuestion();
 
+        // Convert the string color to a number
+        const color = parseInt('0099ff', 16);
+
         // Create an embed for the quiz question
         const quizEmbed = new EmbedBuilder()
             .setTitle('Math Quiz 🧠')
             .setDescription(`**Question:** What is ${question}? Respond with \`!<your answer>\``)
-            .setColor('#0099ff')
+            .setColor(color)
             .setFooter({ text: '⏳ You have 3 minutes to answer.' });
 
         const quizMessage = await interaction.reply({ embeds: [quizEmbed], fetchReply: true });
