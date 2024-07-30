@@ -90,14 +90,54 @@ module.exports = {
                 const startQuestionTimer = () => {
                     const { answer } = quizData.questionData;
 
-                    quizData.questionTimer = setTimeout(() => {
+                    quizData.questionTimer = setTimeout(async () => {
                         if (!quizData.questionAnswered) {
-                            const timeoutEmbed = new EmbedBuilder()
-                                .setTitle('Time\'s Up! ⏳')
-                                .setDescription(`The correct answer was: ${answer}. Here is a new question.`)
-                                .setColor(0xff0000);
+                            try {
+                                const timeoutEmbed = new EmbedBuilder()
+                                    .setTitle('Time\'s Up! ⏳')
+                                    .setDescription(`The correct answer was: ${answer}. Here is a new question.`)
+                                    .setColor(0xff0000);
 
-                            interaction.followUp({ embeds: [timeoutEmbed] });
+                                await interaction.followUp({ embeds: [timeoutEmbed] });
+
+                                const newQuestion = generateQuestion();
+                                quizData.questionData = newQuestion;
+                                quizData.questionAnswered = false;
+
+                                const newQuestionEmbed = new EmbedBuilder()
+                                    .setTitle('Math Quiz 🧠')
+                                    .setDescription(`**New Question:** What is ${newQuestion.question}? Respond with \`!<your answer>\``)
+                                    .setColor(0x0099ff)
+                                    .setFooter({ text: '⏳ You have 2 minutes to answer this question.' });
+
+                                await interaction.followUp({ embeds: [newQuestionEmbed] });
+
+                                startQuestionTimer();
+                            } catch (error) {
+                                console.error('Error sending timeout message:', error);
+                            }
+                        }
+                    }, 2 * 60 * 1000);
+                };
+
+                startQuestionTimer();
+
+                collector.on('collect', async response => {
+                    console.log(`Collected message: ${response.content}`);
+                    const { commandUser, questionData } = quizData;
+                    const userAnswer = parseInt(response.content.slice(1).trim(), 10);
+
+                    if (userAnswer === questionData.answer) {
+                        clearTimeout(quizData.questionTimer);
+                        quizData.questionAnswered = true;
+
+                        try {
+                            const correctEmbed = new EmbedBuilder()
+                                .setTitle('Math Quiz 🧠')
+                                .setDescription('✅ Correct! Here is the next question.')
+                                .setColor(0x0099ff);
+
+                            await interaction.followUp({ embeds: [correctEmbed] });
 
                             const newQuestion = generateQuestion();
                             quizData.questionData = newQuestion;
@@ -109,57 +149,25 @@ module.exports = {
                                 .setColor(0x0099ff)
                                 .setFooter({ text: '⏳ You have 2 minutes to answer this question.' });
 
-                            interaction.followUp({ embeds: [newQuestionEmbed] });
+                            await interaction.followUp({ embeds: [newQuestionEmbed] });
 
                             startQuestionTimer();
+                        } catch (error) {
+                            console.error('Error sending correct answer message:', error);
                         }
-                    }, 2 * 60 * 1000);
-                };
-
-                startQuestionTimer();
-
-                collector.on('collect', response => {
-                    console.log(`Collected message: ${response.content}`);
-                    const { commandUser, questionData } = quizData;
-                    const userAnswer = parseInt(response.content.slice(1).trim(), 10);
-
-                    if (userAnswer === questionData.answer) {
-                        clearTimeout(quizData.questionTimer);
-                        quizData.questionAnswered = true;
-
-                        const correctEmbed = new EmbedBuilder()
-                            .setTitle('Math Quiz 🧠')
-                            .setDescription('✅ Correct! Here is the next question.')
-                            .setColor(0x0099ff);
-
-                        interaction.followUp({ embeds: [correctEmbed] });
-
-                        const newQuestion = generateQuestion();
-                        quizData.questionData = newQuestion;
-                        quizData.questionAnswered = false;
-
-                        const newQuestionEmbed = new EmbedBuilder()
-                            .setTitle('Math Quiz 🧠')
-                            .setDescription(`**New Question:** What is ${newQuestion.question}? Respond with \`!<your answer>\``)
-                            .setColor(0x0099ff)
-                            .setFooter({ text: '⏳ You have 2 minutes to answer this question.' });
-
-                        interaction.followUp({ embeds: [newQuestionEmbed] });
-
-                        startQuestionTimer();
                     }
                 });
 
-                collector.on('end', collected => {
+                collector.on('end', async collected => {
                     if (quizData.overallTimer) {
                         clearTimeout(quizData.overallTimer);
                     }
-                    endQuiz(interaction, channelId, 'The quiz has ended.');
+                    await endQuiz(interaction, channelId, 'The quiz has ended.');
                 });
             } else if (subcommand === 'end') {
                 await interaction.deferReply();
 
-                endQuiz(interaction, channelId, 'The game has ended by user request.');
+                await endQuiz(interaction, channelId, 'The game has ended by user request.');
 
                 await interaction.followUp({ content: 'The game has ended.' });
             }
