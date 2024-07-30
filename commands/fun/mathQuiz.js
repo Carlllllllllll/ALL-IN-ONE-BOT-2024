@@ -14,7 +14,7 @@ function generateQuestion() {
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('mathquiz')
-        .setDescription('Start a math quiz in this channel.')
+        .setDescription('Start or end a math quiz in this channel.')
         .addSubcommand(subcommand =>
             subcommand
                 .setName('start')
