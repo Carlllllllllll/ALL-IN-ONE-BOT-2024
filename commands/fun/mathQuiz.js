@@ -4,149 +4,193 @@ const { MessageCollector } = require('discord.js');
 let activeQuizzes = new Map();
 
 function generateQuestion() {
-    const num1 = Math.floor(Math.random() * 10) + 1;
-    const num2 = Math.floor(Math.random() * 10) + 1;
-    const answer = num1 + num2;
-    const question = `${num1} + ${num2}`;
-    return { question, answer };
-}
+    const num1 = Math.floor(Math.random() * 100) + 1;
+    const num2 = Math.floor(Math.random() * 100) + 1;
+    const operations = ['+', '-'];
+    const operation = operations[Math.floor(Math.random() * operations.length)];
+    const question = `${num1} ${operation} ${num2}`;
+    let answer;
 
-async function startQuiz(interaction) {
-    const channelId = interaction.channel.id;
-    const userId = interaction.user.id;
-
-    // Check if there's already an active quiz in this channel
-    if (activeQuizzes.has(channelId)) {
-        return interaction.reply({ content: 'There is already an active quiz in this channel.', ephemeral: true });
+    switch (operation) {
+        case '+':
+            answer = num1 + num2;
+            break;
+        case '-':
+            answer = num1 - num2;
+            break;
     }
 
-    // Set up a new quiz
-    const questionData = generateQuestion();
-    activeQuizzes.set(channelId, {
-        commandUser: userId,
-        questionData,
-        collector: null,
-        questionTimer: null,
-        questionAnswered: false
-    });
-
-    const { question, answer } = questionData;
-    const color = 0x0099ff; // Color as a numeric value
-
-    const quizEmbed = new EmbedBuilder()
-        .setTitle('Math Quiz 🧠')
-        .setDescription(`**Question:** What is ${question}? Respond with \`!<your answer>\``)
-        .setColor(color)
-        .setFooter({ text: '⏳ You have 3 minutes to answer this question.' });
-
-    // Reply with the quiz question
-    await interaction.reply({ embeds: [quizEmbed] });
-
-    // Set up message collector
-    const filter = response => {
-        return response.content.startsWith('!') &&
-            response.author.id !== interaction.client.user.id &&
-            !isNaN(response.content.slice(1).trim()) &&
-            response.channel.id === channelId;
-    };
-
-    const collector = new MessageCollector(interaction.channel, { filter, time: 3 * 60 * 1000 });
-    activeQuizzes.get(channelId).collector = collector;
-
-    // Timer for question timeout
-    const startQuestionTimer = () => {
-        const { answer } = questionData;
-
-        activeQuizzes.get(channelId).questionTimer = setTimeout(() => {
-            if (!activeQuizzes.get(channelId).questionAnswered) {
-                const timeoutEmbed = new EmbedBuilder()
-                    .setTitle('Time\'s up for this question! ⏳')
-                    .setDescription(`The correct answer was: ${answer}. The quiz has now ended.`)
-                    .setColor(0xff0000); // Color as a numeric value
-
-                interaction.channel.send({ embeds: [timeoutEmbed] });
-                activeQuizzes.delete(channelId);
-            }
-        }, 3 * 60 * 1000); // 3 minutes
-    };
-
-    startQuestionTimer();
-
-    collector.on('collect', message => {
-        if (message.content.slice(1).trim() == questionData.answer) {
-            // Correct answer
-            activeQuizzes.get(channelId).questionAnswered = true;
-            clearTimeout(activeQuizzes.get(channelId).questionTimer);
-            collector.stop();
-
-            const correctEmbed = new EmbedBuilder()
-                .setTitle('Correct Answer! ✅')
-                .setDescription(`The correct answer was ${questionData.answer}. Well done!`)
-                .setColor(0x00ff00); // Color as a numeric value
-
-            interaction.channel.send({ embeds: [correctEmbed] });
-
-            // Schedule a new question if the quiz should continue
-            setTimeout(() => startQuiz(interaction), 1000); // 1-second delay before starting the next question
-        }
-    });
-
-    collector.on('end', (collected, reason) => {
-        if (reason === 'time') {
-            const timeoutEmbed = new EmbedBuilder()
-                .setTitle('Time\'s up for this question! ⏳')
-                .setDescription(`The correct answer was: ${questionData.answer}. The quiz has now ended.`)
-                .setColor(0xff0000); // Color as a numeric value
-
-            interaction.channel.send({ embeds: [timeoutEmbed] });
-            activeQuizzes.delete(channelId);
-        }
-    });
+    return { question, answer };
 }
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('mathquiz')
-        .setDescription('Start or end a math quiz in this channel.')
+        .setDescription('Start or end a math quiz.')
         .addSubcommand(subcommand =>
             subcommand
                 .setName('start')
-                .setDescription('Start a new math quiz in this channel.')
+                .setDescription('Start a math quiz in this channel.')
         )
         .addSubcommand(subcommand =>
             subcommand
-                .setName('end')
-                .setDescription('End the current math quiz in this channel.')
+                .setName('endgame')
+                .setDescription('End the current math quiz.')
         ),
     async execute(interaction) {
-        const subcommand = interaction.options.getSubcommand();
-
-        if (subcommand === 'start') {
-            await startQuiz(interaction);
-        } else if (subcommand === 'end') {
+        try {
+            const subcommand = interaction.options.getSubcommand();
             const channelId = interaction.channel.id;
             const userId = interaction.user.id;
 
-            // End the current quiz
-            if (!activeQuizzes.has(channelId)) {
-                return interaction.reply({ content: 'There is no active quiz in this channel.', ephemeral: true });
+            if (subcommand === 'start') {
+                if (activeQuizzes.has(channelId)) {
+                    await interaction.reply({ content: 'There is already an active quiz in this channel.', ephemeral: true });
+                    return;
+                }
+
+                const quizData = {
+                    commandUser: userId,
+                    questionData: generateQuestion(),
+                    collector: null,
+                    questionTimer: null,
+                    questionAnswered: false,
+                    overallTimer: setTimeout(() => {
+                        endQuiz(channelId, 'The overall quiz time of 3 minutes has ended.');
+                    }, 3 * 60 * 1000)
+                };
+                activeQuizzes.set(channelId, quizData);
+
+                const { question } = quizData.questionData;
+                const color = '#0099ff';
+
+                const quizEmbed = new EmbedBuilder()
+                    .setTitle('Math Quiz 🧠')
+                    .setDescription(`**Question:** What is ${question}? Respond with \`!<your answer>\``)
+                    .setColor(color)
+                    .setFooter({ text: '⏳ You have 30 seconds to answer this question.' });
+
+                await interaction.reply({ embeds: [quizEmbed] });
+
+                const filter = response => {
+                    return response.content.startsWith('!') &&
+                        response.author.id !== interaction.client.user.id &&
+                        !isNaN(response.content.slice(1).trim()) &&
+                        response.channel.id === channelId;
+                };
+
+                const collector = new MessageCollector(interaction.channel, { filter, time: 3 * 60 * 1000 });
+                quizData.collector = collector;
+
+                const startQuestionTimer = () => {
+                    const { answer } = quizData.questionData;
+
+                    quizData.questionTimer = setTimeout(() => {
+                        if (!quizData.questionAnswered) {
+                            const timeoutEmbed = new EmbedBuilder()
+                                .setTitle('Time\'s up for this question! ⏳')
+                                .setDescription(`The correct answer was: ${answer}. Here is a new question.`)
+                                .setColor('#ff0000');
+
+                            interaction.followUp({ embeds: [timeoutEmbed] });
+
+                            const newQuestion = generateQuestion();
+                            quizData.questionData = newQuestion;
+                            quizData.questionAnswered = false;
+
+                            const newQuestionEmbed = new EmbedBuilder()
+                                .setTitle('Math Quiz 🧠')
+                                .setDescription(`**New Question:** What is ${newQuestion.question}? Respond with \`!<your answer>\``)
+                                .setColor('#0099ff')
+                                .setFooter({ text: '⏳ You have 30 seconds to answer this question.' });
+
+                            interaction.followUp({ embeds: [newQuestionEmbed] });
+
+                            startQuestionTimer();
+                        }
+                    }, 30 * 1000);
+                };
+
+                startQuestionTimer();
+
+                collector.on('collect', async response => {
+                    const { commandUser, questionData } = quizData;
+                    const userAnswer = parseInt(response.content.slice(1).trim(), 10);
+
+                    if (userAnswer === questionData.answer) {
+                        clearTimeout(quizData.questionTimer);
+                        quizData.questionAnswered = true;
+
+                        const correctEmbed = new EmbedBuilder()
+                            .setTitle('Math Quiz 🧠')
+                            .setDescription('✅ Correct! Here is the next question.')
+                            .setColor('#0099ff');
+
+                        await response.reply({ embeds: [correctEmbed] });
+
+                        const newQuestion = generateQuestion();
+                        quizData.questionData = newQuestion;
+                        quizData.questionAnswered = false;
+
+                        const newQuestionEmbed = new EmbedBuilder()
+                            .setTitle('Math Quiz 🧠')
+                            .setDescription(`**New Question:** What is ${newQuestion.question}? Respond with \`!<your answer>\``)
+                            .setColor('#0099ff')
+                            .setFooter({ text: '⏳ You have 30 seconds to answer this question.' });
+
+                        await response.channel.send({ embeds: [newQuestionEmbed] });
+
+                        startQuestionTimer();
+                    } else {
+                        await response.reply('❌ Incorrect answer! Try again.');
+                    }
+                });
+
+                collector.on('end', () => {
+                    endQuiz(channelId, 'The quiz has ended. Thanks for participating!');
+                });
+
+            } else if (subcommand === 'endgame') {
+                if (!activeQuizzes.has(channelId)) {
+                    await interaction.reply({ content: 'There is no active quiz in this channel.', ephemeral: true });
+                    return;
+                }
+
+                const { commandUser } = activeQuizzes.get(channelId);
+
+                if (interaction.user.id !== commandUser) {
+                    await interaction.reply({ content: '🔒 Only the quiz starter can end the quiz.', ephemeral: true });
+                    return;
+                }
+
+                endQuiz(channelId, 'The quiz has been manually ended by the quiz starter.');
             }
-
-            const quizData = activeQuizzes.get(channelId);
-            if (quizData.commandUser !== userId) {
-                return interaction.reply({ content: 'Only the quiz starter can end the quiz.', ephemeral: true });
+        } catch (error) {
+            console.error('Error executing math quiz command:', error);
+            if (!interaction.replied) {
+                await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+            } else {
+                await interaction.followUp({ content: 'There was an error while executing this command!', ephemeral: true });
             }
-
-            clearTimeout(quizData.questionTimer);
-            quizData.collector.stop();
-
-            const endEmbed = new EmbedBuilder()
-                .setTitle('Quiz Ended! ❌')
-                .setDescription('The quiz has been ended by the command user.')
-                .setColor(0xff0000); // Color as a numeric value
-
-            await interaction.reply({ embeds: [endEmbed] });
-            activeQuizzes.delete(channelId);
         }
     },
 };
+
+function endQuiz(channelId, endMessage) {
+    if (!activeQuizzes.has(channelId)) return;
+
+    const quizData = activeQuizzes.get(channelId);
+
+    clearTimeout(quizData.questionTimer);
+    clearTimeout(quizData.overallTimer);
+    quizData.collector.stop();
+
+    activeQuizzes.delete(channelId);
+
+    const endEmbed = new EmbedBuilder()
+        .setTitle('Math Quiz Ended ⏳')
+        .setDescription(endMessage)
+        .setColor('#ff0000');
+
+    quizData.collector.channel.send({ embeds: [endEmbed] });
+}
