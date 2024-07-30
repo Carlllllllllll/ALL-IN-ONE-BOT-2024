@@ -65,12 +65,12 @@ module.exports = {
                     .setTitle('Math Quiz 🧠')
                     .setDescription(`**Question:** What is ${question}? Respond with \`!<your answer>\``)
                     .setColor(color)
-                    .setFooter({ text: '⏳ You have 30 seconds to answer each question.' });
+                    .setFooter({ text: '⏳ You have 30 seconds to answer the question.' });
 
                 await interaction.reply({ embeds: [quizEmbed] });
 
                 const filter = response => {
-                    return response.content.startsWith('!') && 
+                    return response.content.startsWith('!') &&
                            response.author.id === userId &&
                            !isNaN(response.content.slice(1).trim());
                 };
@@ -81,16 +81,18 @@ module.exports = {
 
                 const startQuestionTimer = () => {
                     questionTimer = setTimeout(() => {
-                        const newQuestion = generateQuestion();
-                        const newQuestionEmbed = new EmbedBuilder()
-                            .setTitle('Math Quiz 🧠')
-                            .setDescription(`**New Question:** What is ${newQuestion.question}? Respond with \`!<your answer>\``)
-                            .setColor(color)
-                            .setFooter({ text: '⏳ You have 30 seconds to answer each question.' });
+                        if (activeQuizzes.has(channelId)) {
+                            const newQuestion = generateQuestion();
+                            const newQuestionEmbed = new EmbedBuilder()
+                                .setTitle('Math Quiz 🧠')
+                                .setDescription(`**New Question:** What is ${newQuestion.question}? Respond with \`!<your answer>\``)
+                                .setColor(color)
+                                .setFooter({ text: '⏳ You have 30 seconds to answer each question.' });
 
-                        interaction.followUp({ embeds: [newQuestionEmbed] });
+                            interaction.followUp({ embeds: [newQuestionEmbed] });
 
-                        startQuestionTimer(); // Restart the question timer
+                            startQuestionTimer(); // Restart the question timer
+                        }
                     }, 30 * 1000);
                 };
 
@@ -120,7 +122,7 @@ module.exports = {
 
                         interaction.followUp({ embeds: [newQuestionEmbed] });
 
-                        startQuestionTimer();
+                        startQuestionTimer(); // Restart the question timer
                     } else {
                         response.reply('❌ Incorrect answer! Try again.');
                     }
