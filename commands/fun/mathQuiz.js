@@ -28,7 +28,7 @@ module.exports = {
         .setDescription('Start a math quiz!'),
     async execute(interaction) {
         if (activeQuizzes.has(interaction.channel.id)) {
-            await interaction.followUp('There is already an active quiz in this channel.');
+            await interaction.reply('There is already an active quiz in this channel.');
             return;
         }
 
@@ -43,7 +43,7 @@ module.exports = {
             .setColor(color)
             .setFooter({ text: '⏳ You have 3 minutes to answer.' });
 
-        await interaction.followUp({ embeds: [quizEmbed] });
+        await interaction.reply({ embeds: [quizEmbed] });
 
         const filter = response => {
             return response.content.startsWith('!') && response.author.id !== interaction.client.user.id;
