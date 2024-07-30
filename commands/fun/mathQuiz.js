@@ -53,7 +53,7 @@ module.exports = {
                     return;
                 }
 
-                await interaction.deferReply({ ephemeral: false });
+                await interaction.deferReply();
                 const quizData = {
                     commandUser: userId,
                     questionData: generateQuestion(),
@@ -79,9 +79,9 @@ module.exports = {
 
                 const filter = response => {
                     return response.content.startsWith('!') &&
-                        response.author.id !== interaction.client.user.id &&
-                        !isNaN(response.content.slice(1).trim()) &&
-                        response.channel.id === channelId;
+                           response.author.id !== interaction.client.user.id &&
+                           !isNaN(response.content.slice(1).trim()) &&
+                           response.channel.id === channelId;
                 };
 
                 const collector = new MessageCollector(interaction.channel, { filter, time: 2 * 60 * 1000 });
@@ -119,7 +119,8 @@ module.exports = {
                 startQuestionTimer();
 
                 collector.on('collect', response => {
-                    const { questionData } = quizData;
+                    console.log(`Collected message: ${response.content}`);
+                    const { commandUser, questionData } = quizData;
                     const userAnswer = parseInt(response.content.slice(1).trim(), 10);
 
                     if (userAnswer === questionData.answer) {
@@ -156,9 +157,11 @@ module.exports = {
                     endQuiz(interaction, channelId, 'The quiz has ended.');
                 });
             } else if (subcommand === 'end') {
-                await interaction.deferReply({ ephemeral: false });
+                await interaction.deferReply();
 
                 endQuiz(interaction, channelId, 'The game has ended by user request.');
+
+                await interaction.followUp({ content: 'The game has ended.' });
             }
         } catch (error) {
             console.error('Error executing math quiz command:', error);
@@ -195,11 +198,7 @@ async function endQuiz(interaction, channelId, reason) {
                 .setDescription(reason)
                 .setColor(0xff0000);
 
-            try {
-                await channel.send({ embeds: [endEmbed] });
-            } catch (error) {
-                console.error('Failed to send end message:', error);
-            }
+            await channel.send({ embeds: [endEmbed] });
         }
     } else {
         const channel = await interaction.client.channels.fetch(channelId);
@@ -209,11 +208,7 @@ async function endQuiz(interaction, channelId, reason) {
                 .setDescription('There is no active quiz to end.')
                 .setColor(0xff0000);
 
-            try {
-                await channel.send({ embeds: [noQuizEmbed] });
-            } catch (error) {
-                console.error('Failed to send no quiz message:', error);
-            }
+            await channel.send({ embeds: [noQuizEmbed] });
         }
     }
 }
