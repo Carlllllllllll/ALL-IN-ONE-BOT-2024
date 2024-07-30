@@ -57,7 +57,7 @@ module.exports = {
                     questionTimer: null,
                     questionAnswered: false,
                     overallTimer: setTimeout(() => {
-                        endQuiz(channelId, 'The overall quiz time of 2 minutes has ended.');
+                        endQuiz(channelId, 'Time\'s up! The overall quiz time of 2 minutes has ended.');
                     }, 2 * 60 * 1000) // 2 minutes
                 };
                 activeQuizzes.set(channelId, quizData);
@@ -89,9 +89,9 @@ module.exports = {
                     quizData.questionTimer = setTimeout(() => {
                         if (!quizData.questionAnswered) {
                             const timeoutEmbed = new EmbedBuilder()
-                                .setTitle('Time\'s up for this question! ⏳')
+                                .setTitle('Time\'s Up! ⏳')
                                 .setDescription(`The correct answer was: ${answer}. Here is a new question.`)
-                                .setColor(blueColor);
+                                .setColor(0xff0000); // Red color
 
                             interaction.followUp({ embeds: [timeoutEmbed] });
 
@@ -155,10 +155,10 @@ module.exports = {
                 await interaction.deferReply(); // Defers the reply to handle processing time
 
                 // End the quiz
-                endQuiz(channelId, 'The quiz has been ended by the user.');
+                endQuiz(channelId, 'The game has ended by user request.');
 
                 // Notify that the game has ended
-                await interaction.followUp({ content: 'The quiz has been ended.' });
+                await interaction.followUp({ content: 'The game has ended.' });
             }
         } catch (error) {
             console.error('Error executing math quiz command:', error);
