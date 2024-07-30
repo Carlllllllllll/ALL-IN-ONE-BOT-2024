@@ -183,5 +183,16 @@ function endQuiz(channelId, reason) {
         if (channel) {
             channel.send({ embeds: [endEmbed] });
         }
+    } else {
+        // Handle case where no quiz was active
+        const noQuizEmbed = new EmbedBuilder()
+            .setTitle('Math Quiz 🧠')
+            .setDescription('There is no active quiz to end.')
+            .setColor(0xff0000); // Red color
+
+        const channel = interaction.client.channels.cache.get(channelId);
+        if (channel) {
+            channel.send({ embeds: [noQuizEmbed] });
+        }
     }
 }
