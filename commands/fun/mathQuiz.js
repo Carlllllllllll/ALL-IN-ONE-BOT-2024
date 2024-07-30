@@ -8,14 +8,18 @@ function generateQuestion() {
     const num2 = Math.floor(Math.random() * 100) + 1;
     const operations = ['+', '-'];
     const operation = operations[Math.floor(Math.random() * operations.length)];
-    const question = `${num1} ${operation} ${num2}`;
-    let answer;
+    let question, answer;
 
     switch (operation) {
         case '+':
+            question = `${num1} + ${num2}`;
             answer = num1 + num2;
             break;
         case '-':
+            if (num1 < num2) {
+                [num1, num2] = [num2, num1];
+            }
+            question = `${num1} - ${num2}`;
             answer = num1 - num2;
             break;
     }
