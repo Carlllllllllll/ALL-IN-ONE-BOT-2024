@@ -123,11 +123,10 @@ module.exports = {
                 startQuestionTimer();
 
                 collector.on('collect', async response => {
-                    console.log(`Collected message: ${response.content}`);
-                    const { commandUser, questionData } = quizData;
+                    const { answer } = quizData.questionData;
                     const userAnswer = parseInt(response.content.slice(1).trim(), 10);
 
-                    if (userAnswer === questionData.answer) {
+                    if (userAnswer === answer) {
                         clearTimeout(quizData.questionTimer);
                         quizData.questionAnswered = true;
 
@@ -155,6 +154,8 @@ module.exports = {
                         } catch (error) {
                             console.error('Error sending correct answer message:', error);
                         }
+                    } else {
+                        await response.reply({ content: '❌ Incorrect answer! Try again.', ephemeral: true });
                     }
                 });
 
