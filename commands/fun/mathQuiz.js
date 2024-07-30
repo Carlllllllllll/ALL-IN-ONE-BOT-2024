@@ -36,18 +36,18 @@ module.exports = {
                 )),
     async execute(interaction) {
         const action = interaction.options.getString('action');
+        const channelId = interaction.channel.id;
 
-        // Check if there's already an active quiz in the channel
         if (action === 'start') {
-            if (activeQuizzes.has(interaction.channel.id)) {
+            if (activeQuizzes.has(channelId)) {
                 await interaction.reply('There is already an active quiz in this channel.');
                 return;
             }
 
-            activeQuizzes.add(interaction.channel.id);
+            activeQuizzes.add(channelId);
 
             let { question, answer } = generateQuestion();
-            const color = parseInt('0099ff', 16);
+            const color = '#0099ff'; // Color in hex format
 
             const quizEmbed = new EmbedBuilder()
                 .setTitle('Math Quiz 🧠')
@@ -83,7 +83,7 @@ module.exports = {
             });
 
             collector.on('end', collected => {
-                activeQuizzes.delete(interaction.channel.id);
+                activeQuizzes.delete(channelId);
 
                 if (collected.size === 0) {
                     const timeoutEmbed = new EmbedBuilder()
@@ -94,13 +94,14 @@ module.exports = {
                     interaction.followUp({ embeds: [timeoutEmbed] });
                 }
             });
+
         } else if (action === 'end') {
-            if (!activeQuizzes.has(interaction.channel.id)) {
+            if (!activeQuizzes.has(channelId)) {
                 await interaction.reply('There is no active quiz in this channel.');
                 return;
             }
 
-            activeQuizzes.delete(interaction.channel.id);
+            activeQuizzes.delete(channelId);
 
             const endEmbed = new EmbedBuilder()
                 .setTitle('Math Quiz Ended')
